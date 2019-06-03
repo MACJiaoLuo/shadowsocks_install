@@ -1,0 +1,2 @@
+# shadowsocks_install
+静态编译shadowsocks快速部署服务
