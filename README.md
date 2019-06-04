@@ -17,7 +17,7 @@ chmod +x shadowsocks-libev.sh
 
 ```
 
-bash shadowsocks-libev.shuninstall  
+./shadowsocks-libev.sh uninstall  
 
 ```
 ### 启动脚本
