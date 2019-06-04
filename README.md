@@ -1,8 +1,9 @@
 # shadowsocks_install
 静态编译shadowsocks快速部署服务
-#### 服务端部署 #### 
 
-一键执行脚本
+### 使用方法
+
+使用root用户登录，运行以下命令：
 
 ```
 
@@ -12,10 +13,22 @@ chmod +x shadowsocks-libev.sh
 
 ```
 
-卸载
+### 卸载方法
 
 ```
 
 bash shadowsocks-libev.shuninstall  
 
+```
+### 启动脚本
+
+启动脚本后面的参数含义，从左至右依次为：启动，停止，重启，查看状态。
+Shadowsocks-libev 版：
+```
+/etc/init.d/shadowsocks-libev start | stop | restart | status
+```
+### 默认配置文件
+Shadowsocks-libev 版：
+```
+/etc/shadowsocks-libev/config.json
 ```
