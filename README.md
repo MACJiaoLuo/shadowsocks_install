@@ -6,7 +6,9 @@
 
 ```
 
-wget --no-check-certificate -O gost_install.sh https://raw.githubusercontent.com/yiguihai/shadowsocks_install/master/shadowsocks-libev.sh&&bash shadowsocks-libev.sh
+wget --no-check-certificate -O gost_install.sh https://raw.githubusercontent.com/yiguihai/shadowsocks_install/master/shadowsocks-libev.sh
+chmod +x shadowsocks-libev.sh
+./shadowsocks-libev.sh 2>&1 | tee shadowsocks-libev.log
 
 ```
 
