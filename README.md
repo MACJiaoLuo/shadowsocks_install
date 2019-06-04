@@ -23,12 +23,10 @@ bash shadowsocks-libev.shuninstall
 ### 启动脚本
 
 启动脚本后面的参数含义，从左至右依次为：启动，停止，重启，查看状态。
-Shadowsocks-libev 版：
 ```
 /etc/init.d/shadowsocks-libev start | stop | restart | status
 ```
 ### 默认配置文件
-Shadowsocks-libev 版：
 ```
 /etc/shadowsocks-libev/config.json
 ```
