@@ -60,6 +60,12 @@ xchacha20-ietf-poly1305
 # libev obfuscating
 obfs_libev=(http tls)
 
+url_list_ipv4=(
+ipv4.icanhazip.com
+ipinfo.io/ip
+ifconfig.me
+)
+
 check_sys(){
 for i in 'apt' 'yum'; do
   type -f $i > /dev/null 2>&1
@@ -70,35 +76,11 @@ for i in 'apt' 'yum'; do
 done
 if [[ ${release} == "yum" ]]; then
   if $(type -f 'firewall-cmd' > /dev/null 2>&1); then
-    centos_ver=7;
+    centos_ver=7
   else
     unset -v centos_ver
   fi
 fi
-}
-
-get_rand()(
-    min=$1
-    max=$(($2-$min+1))
-    num=$(($RANDOM+1000000000)) #增加一个10位的数再求余
-    echo $(($num%$max+$min))
-)
-
-get_ipv4(){
-    ipv4=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
-    [ -z ${ipv4} ] && ipv4=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
-    [ -z ${ipv4} ] && ipv4=$( wget -qO- -t1 -T2 ipinfo.io/ip )
-    [ -z ${ipv4} ] && return 1 || return 0
-}
-
-get_ipv6(){
-    ipv6=$(wget -qO- -t1 -T2 ipv6.icanhazip.com)
-    [ -z ${ipv6} ] && return 1 || return 0
-}
-
-get_libev_ver(){
-    libev_ver=$(wget --no-check-certificate -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    [ -z ${libev_ver} ] && echo -e "[${red}Error${plain}] Get shadowsocks-libev latest version failed" && exit 1
 }
 
 urlencodepipe(){
@@ -115,18 +97,44 @@ urlencode()(
   printf "$*"|urlencodepipe;
 )
 
+get_rand()(
+    min=$1
+    max=$(($2-$min+1))
+    num=$(($RANDOM+1000000000)) #增加一个10位的数再求余
+    echo $(($num%$max+$min))
+)
+
+get_ipv4(){
+    ipv4=$(ip addr|egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\."|head -n 1)
+    share_name=$(wget -qO- -t1 -T2 -U 'curl/7.65.0' cip.cc|grep '地址'|cut -d':' -f2|sed 's/^[ \t]*//g')
+    if [[ -z "${ipv4}" ]]; then
+      for i in ${url_list_ipv4[@]}; do
+        ipv4=$(wget -qO- -t1 -T2 $i)
+        if [[ -z "${ipv4}" ]]; then
+          unset -v ipv4        
+        else
+          continue
+        fi
+      done
+    fi
+}
+
+get_ipv6(){
+    ipv6=$(wget -qO- -t1 -T2 ipv6.icanhazip.com)
+}
+
 download_file()(
     filename=$(basename $1)
-    if [ -f ${1} ]; then
-        echo "${filename} [found]"
+    if [[ -f ${1} ]]; then
+      echo "${filename} [found]"
     else
-        echo "${filename} not found, download now..."
-        wget --no-check-certificate -c -t3 -T60 -O ${1} ${2}
-        if [ $? -ne 0 ]; then
-            echo -e "[${red}Error${plain}] Download ${filename} failed."
-            exit 1
-        fi
-        chmod +x ${1}
+      echo "${filename} not found, download now..."
+      wget --no-check-certificate -c -t3 -T60 -O ${1} ${2}
+      if [ $? -ne 0 ]; then
+        echo -e "[${red}Error${plain}] Download ${filename} failed."
+        exit 1
+      fi
+      chmod +x ${1}
     fi
 )
 
@@ -134,7 +142,7 @@ install_prepare_shadowsocks(){
     unset -v server_port
     local sport=$(get_rand 1024 65535)
     echo -e "请输入Shadowsocks远程端口 [1-65535]"
-    until [ $server_port ]; do      
+    until [[ $server_port ]]; do      
       read -p "(默认端口: $(echo -e "${cyan}${sport}${plain}")):" server_port
       server_port=$(echo $server_port|egrep -o '[0-9]{1,5}')
       [ -z "${server_port}" ] && server_port=${sport}
@@ -283,6 +291,7 @@ config_firewall()(
 
 install_completed_libev()(
     ${shadowsocks_libev_init} start
+    name=$(urlencode "${share_name}")
     echo
     echo -e "Congratulations, ${green}Shadowsocks-libev${plain} ${lightred}$(ss-server -h|grep -oE "([0-9]\.){1,2}[0-9]"|head -n 1)${plain} server install completed!"    
     if [ "${ipv4}" ]; then
@@ -302,24 +311,24 @@ install_completed_libev()(
       echo "Your QR Code: (For Shadowsocks Windows, OSX, Android and iOS clients)"
       tmp="?plugin=$(urlencode "obfs-local;obfs=$obfs;obfs-host=www.bing.com")"
       if [ "${qr_code_v4}" ]; then
-        echo -e "${green} ${qr_code_v4}${tmp} ${plain}"
+        echo -e "${green} ${qr_code_v4}${tmp}#${name} ${plain}"
       fi
       if [ "${qr_code_v6}" ]; then
-        echo -e "${green} ${qr_code_v6}${tmp} ${plain}"
+        echo -e "${green} ${qr_code_v6}${tmp}#${name} ${plain}"
       fi
     ;;
     *)
       echo "Your QR Code: (For Shadowsocks Windows, OSX, Android and iOS clients)"
       if [ "${qr_code_v4}" ]; then
-        echo -e "${green} ${qr_code_v4} ${plain}"
+        echo -e "${green} ${qr_code_v4}#${name} ${plain}"
       fi
       if [ "${qr_code_v6}" ]; then
-        echo -e "${green} ${qr_code_v6} ${plain}"
+        echo -e "${green} ${qr_code_v6}#${name} ${plain}"
       fi
     ;;
     esac
     echo 
-    echo -e "[${red}FBI WARNING${plain}]${yellow}此脚本切勿用于翻墙之外的其余用途！！！${plain}"
+    echo -e "[${red}FBI WARNING${plain}]${yellow}以上链接信息拿笔记好。此脚本切勿用于翻墙之外的其余用途！！！${plain}"
 )
 
 install_shadowsocks()(
@@ -390,4 +399,3 @@ case "${action}" in
         echo "Usage: $(basename $0) [install|uninstall]"
         ;;
 esac
-
