@@ -106,7 +106,7 @@ get_rand()(
 
 get_ipv4(){
     ipv4=$(ip addr|egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\."|head -n 1)
-    share_name=$(wget -qO- -t1 -T2 -U 'curl/7.65.0' cip.cc|grep '地址'|cut -d':' -f2|sed 's/^[ \t]*//g')
+    addr=$(wget -qO- -t1 -T2 -U 'curl/7.65.0' cip.cc|grep '地址'|cut -d':' -f2|sed 's/^[ \t]*//g')
     if [[ -z "${ipv4}" ]]; then
       for i in ${url_list_ipv4[@]}; do
         ipv4=$(wget -qO- -t1 -T2 $i)
@@ -291,7 +291,7 @@ config_firewall()(
 
 install_completed_libev()(
     ${shadowsocks_libev_init} start
-    name=$(urlencode "${share_name}")
+    name=$(urlencode "${addr}")
     echo
     echo -e "Congratulations, ${green}Shadowsocks-libev${plain} ${lightred}$(ss-server -h|grep -oE "([0-9]\.){1,2}[0-9]"|head -n 1)${plain} server install completed!"    
     if [ "${ipv4}" ]; then
