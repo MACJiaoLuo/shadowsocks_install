@@ -1,5 +1,6 @@
 # shadowsocks_install
-静态编译shadowsocks快速部署服务
+静态编译shadowsocks快速部署服务，脚本、编译文件更新随缘。
+懒蛇🐍一条…
 
 ### 使用方法
 
